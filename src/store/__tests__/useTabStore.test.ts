@@ -125,4 +125,10 @@ describe('useTabStore', () => {
     setDuration(0, 0, 0.5); // Set to eighth note
     expect(useTabStore.getState().song.measures[0].beats[0].duration).toBe(0.5);
   });
+
+  it('should update the time signature', () => {
+    const { updateTimeSignature } = useTabStore.getState();
+    updateTimeSignature(3, 4);
+    expect(useTabStore.getState().song.timeSignature).toEqual([3, 4]);
+  });
 });

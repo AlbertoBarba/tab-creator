@@ -172,4 +172,7 @@ export const useTabStore = create<TabState>((set) => ({
     
     return { song: { ...state.song, measures: newMeasures } };
   }),
+  updateTimeSignature: (num, den) => set((state) => ({
+    song: { ...state.song, timeSignature: [num, den] }
+  })),
 }));
