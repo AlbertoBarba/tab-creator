@@ -35,6 +35,49 @@ export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount }
       <line x1={0} y1={0} x2={0} y2={(tuningCount - 1) * lineSpacing} stroke="black" strokeWidth="2" />
       <line x1={measureWidth} y1={0} x2={measureWidth} y2={(tuningCount - 1) * lineSpacing} stroke="black" strokeWidth="2" />
 
+      {measure.beats.map((beat, bIdx) => {
+        const beatWidth = measureWidth / (measure.beats.length || 1);
+        return (
+          <g key={bIdx} transform={`translate(${bIdx * beatWidth + beatWidth / 2}, 0)`}>
+            {!beat.isRest && beat.notes.map((note) => (
+              <g key={note.string}>
+                {/* White background circle for the number */}
+                <circle
+                  cx={0}
+                  cy={note.string * lineSpacing}
+                  r={8}
+                  fill="white"
+                />
+                <text
+                  x={0}
+                  y={note.string * lineSpacing}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fontSize="12"
+                  fontWeight="bold"
+                  className="select-none"
+                >
+                  {note.fret}
+                </text>
+              </g>
+            ))}
+            {beat.isRest && (
+              <text
+                x={0}
+                y={(tuningCount - 1) * lineSpacing / 2}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize="16"
+                fill="#999"
+                className="select-none"
+              >
+                /
+              </text>
+            )}
+          </g>
+        );
+      })}
+
       {isSelectedMeasure && (
         <rect
           x={(measureWidth / (measure.beats.length || 1)) * cursor.beatIndex - 10}
