@@ -7,6 +7,7 @@ function App() {
   const cursor = useTabStore((state) => state.cursor);
   const addMeasure = useTabStore((state) => state.addMeasure);
   const deleteMeasure = useTabStore((state) => state.deleteMeasure);
+  const fillMeasureWithRests = useTabStore((state) => state.fillMeasureWithRests);
   const updateTimeSignature = useTabStore((state) => state.updateTimeSignature);
 
   const handleTimeSigChange = (num: string, den: string) => {
@@ -48,6 +49,12 @@ function App() {
               Add Measure
             </button>
             <button 
+              onClick={() => fillMeasureWithRests(cursor.measureIndex)}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
+            >
+              Fill Measure
+            </button>
+            <button 
               onClick={() => deleteMeasure(cursor.measureIndex)}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
             >
@@ -64,7 +71,10 @@ function App() {
           <div><kbd className="bg-gray-100 px-1 rounded border">Arrows</kbd> Navigate</div>
           <div><kbd className="bg-gray-100 px-1 rounded border">0-9</kbd> Enter Fret</div>
           <div><kbd className="bg-gray-100 px-1 rounded border">Backspace</kbd> Delete Note</div>
+          <div><kbd className="bg-gray-100 px-1 rounded border">r</kbd> Toggle Rest</div>
           <div><kbd className="bg-gray-100 px-1 rounded border">w</kbd>/<kbd className="bg-gray-100 px-1 rounded border">h</kbd>/<kbd className="bg-gray-100 px-1 rounded border">q</kbd>/<kbd className="bg-gray-100 px-1 rounded border">e</kbd> Whole/Half/Quarter/Eighth</div>
+          <div><kbd className="bg-gray-100 px-1 rounded border">Alt+Enter</kbd> Add Beat</div>
+          <div><kbd className="bg-gray-100 px-1 rounded border">Alt+BS</kbd> Delete Beat</div>
           <div><kbd className="bg-gray-100 px-1 rounded border">Enter</kbd>/<kbd className="bg-gray-100 px-1 rounded border">+</kbd> New Measure</div>
           <div><kbd className="bg-gray-100 px-1 rounded border">Shift+BS</kbd> Delete Measure</div>
         </div>

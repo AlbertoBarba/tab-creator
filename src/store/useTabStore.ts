@@ -22,6 +22,7 @@ interface TabState {
   toggleRest: (mIdx: number, bIdx: number) => void;
   addBeat: (mIdx: number, bIdx: number) => void;
   deleteBeat: (mIdx: number, bIdx: number) => void;
+  fillMeasureWithRests: (mIdx: number) => void;
 }
 
 export const initialSong: Song = {
@@ -215,5 +216,28 @@ export const useTabStore = create<TabState>((set) => ({
       song: { ...state.song, measures: newMeasures },
       cursor: { ...state.cursor, beatIndex }
     };
+  }),
+  fillMeasureWithRests: (mIdx) => set((state) => {
+    const song = state.song;
+    const measure = { ...song.measures[mIdx] };
+    const expected = song.timeSignature[0] * (4 / song.timeSignature[1]);
+    let current = measure.beats.reduce((sum, b) => sum + b.duration, 0);
+    
+    if (current >= expected - 0.001) return state;
+    
+    const newBeats = [...measure.beats];
+    while (current < expected - 0.001) {
+      const remaining = expected - current;
+      let duration = 1; // Default to quarter
+      if (remaining < 1) duration = remaining; // Use remaining if less than a quarter
+      
+      newBeats.push({ duration, isRest: true, notes: [] });
+      current += duration;
+    }
+    
+    measure.beats = newBeats;
+    const newMeasures = [...song.measures];
+    newMeasures[mIdx] = measure;
+    return { song: { ...song, measures: newMeasures } };
   }),
 }));

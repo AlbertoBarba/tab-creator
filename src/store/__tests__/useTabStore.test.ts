@@ -170,4 +170,41 @@ describe('useTabStore', () => {
     deleteBeat(0, 3);
     expect(useTabStore.getState().cursor.beatIndex).toBe(2);
   });
+
+  it('should fill a measure with rests to match time signature', () => {
+    const { fillMeasureWithRests, deleteBeat } = useTabStore.getState();
+    
+    // Initial measure in 4/4 has 4 beats of duration 1 (total = 4)
+    // Delete two beats, so total duration = 2
+    deleteBeat(0, 0);
+    deleteBeat(0, 0);
+    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(2);
+    
+    fillMeasureWithRests(0);
+    
+    const beats = useTabStore.getState().song.measures[0].beats;
+    expect(beats).toHaveLength(4);
+    const totalDuration = beats.reduce((sum, b) => sum + b.duration, 0);
+    expect(totalDuration).toBe(4);
+  });
+
+  it('should handle fractional durations when filling with rests', () => {
+    const { fillMeasureWithRests, setDuration, deleteBeat } = useTabStore.getState();
+    
+    // Total duration should be 4 for 4/4
+    // Set first beat to 0.5 (eighth) and delete others
+    setDuration(0, 0, 0.5);
+    deleteBeat(0, 1);
+    deleteBeat(0, 1);
+    deleteBeat(0, 1);
+    
+    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(1);
+    expect(useTabStore.getState().song.measures[0].beats[0].duration).toBe(0.5);
+    
+    fillMeasureWithRests(0);
+    
+    const beats = useTabStore.getState().song.measures[0].beats;
+    const totalDuration = beats.reduce((sum, b) => sum + b.duration, 0);
+    expect(totalDuration).toBeCloseTo(4);
+  });
 });

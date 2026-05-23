@@ -104,5 +104,5 @@ export const useKeyboardEditor = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [moveCursor, setNote, deleteNote, setDuration, addMeasure, deleteMeasure, cursor]);
+  }, [moveCursor, setNote, deleteNote, setDuration, addMeasure, deleteMeasure, toggleRest, addBeat, deleteBeat, cursor]);
 };
