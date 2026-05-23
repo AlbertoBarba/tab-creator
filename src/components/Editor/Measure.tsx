@@ -14,11 +14,31 @@ export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount, 
   const lineSpacing = 20;
   const measureWidth = 300;
 
+  const song = useTabStore((state) => state.song);
   const cursor = useTabStore((state) => state.cursor);
   const isSelectedMeasure = cursor.measureIndex === index;
 
+  // Calculate expected total duration for this time signature
+  // numerator * (4 / denominator) -> e.g. 4/4 = 4.0, 3/4 = 3.0, 6/8 = 3.0
+  const expectedDuration = song.timeSignature[0] * (4 / song.timeSignature[1]);
+  const actualDuration = measure.beats.reduce((sum, beat) => sum + beat.duration, 0);
+  const isInvalid = Math.abs(actualDuration - expectedDuration) > 0.001;
+
   return (
     <g transform={`translate(${x}, ${y})`}>
+      {/* Red highlight for invalid measures */}
+      {isInvalid && (
+        <rect
+          x={0}
+          y={-10}
+          width={measureWidth}
+          height={(tuningCount - 1) * lineSpacing + 20}
+          fill="rgba(239, 68, 68, 0.1)"
+          stroke="rgba(239, 68, 68, 0.5)"
+          strokeWidth="1"
+        />
+      )}
+
       {/* Horizontal String Lines */}
       {Array.from({ length: tuningCount }).map((_, i) => (
         <line
@@ -80,7 +100,7 @@ export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount, 
             )}
 
             {/* Rhythmic Stem */}
-            {!beat.isRest && beat.duration <= 1 && (
+            {!beat.isRest && beat.duration <= 2 && (
               <line
                 x1={0}
                 y1={stemY1}
