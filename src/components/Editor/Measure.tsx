@@ -105,6 +105,16 @@ export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount, 
   const playhead = useTabStore((state) => state.playhead);
   const isPlaying = useTabStore((state) => state.isPlaying);
 
+  // Calculate cursor position
+  const currentBeatPos = beatPositions[cursor.beatIndex];
+  let cursorX = 0;
+  if (currentBeatPos) {
+    cursorX = currentBeatPos.x + currentBeatPos.width / 2 - 10;
+  } else if (measure.beats.length === 0) {
+    // If empty, position where the first quarter note would go (duration 1.0)
+    cursorX = (1.0 * pixelsPerDuration) / 2 - 10;
+  }
+
   return (
     <g transform={`translate(${x}, ${y})`}>
       {/* Section Label */}
@@ -202,7 +212,7 @@ export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount, 
 
       {isSelectedMeasure && (
         <rect 
-          x={beatPositions[cursor.beatIndex]?.x + beatPositions[cursor.beatIndex]?.width / 2 - 10 || 0} 
+          x={cursorX} 
           y={cursor.stringIndex * lineSpacing - 10} 
           width={20} 
           height={20} 

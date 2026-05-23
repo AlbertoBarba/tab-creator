@@ -159,13 +159,16 @@ export const useTabStore = create<TabState>((set) => ({
     if (state.song.measures.length <= 1) return state;
     const newMeasures = state.song.measures.filter((_, i) => i !== index);
     let { measureIndex, beatIndex } = state.cursor;
+
     if (measureIndex >= index) {
       measureIndex = Math.max(0, measureIndex - 1);
-      beatIndex = 0;
+      // Move to the last beat of the previous measure
+      beatIndex = Math.max(0, newMeasures[measureIndex].beats.length - 1);
     }
     return {
       song: { ...state.song, measures: newMeasures },
-      cursor: { ...state.cursor, measureIndex, beatIndex }
+      cursor: { ...state.cursor, measureIndex, beatIndex },
+      selection: null
     };
   }),
   setCursor: (newCursor, shiftKey = false) => set((state) => {
@@ -205,7 +208,10 @@ export const useTabStore = create<TabState>((set) => ({
           beats: [...measure.beats, { duration: 1, isRest: true, notes: [] }] 
         };
         newMeasures[measureIndex] = newMeasure;
-        const newCursor = { ...cursor, beatIndex: beatIndex + 1 };
+        
+        // If measure was empty, stay at index 0. Otherwise advance.
+        const nextBeatIndex = measure.beats.length === 0 ? 0 : beatIndex + 1;
+        const newCursor = { ...cursor, beatIndex: nextBeatIndex };
         return {
           song: { ...song, measures: newMeasures },
           cursor: newCursor,
