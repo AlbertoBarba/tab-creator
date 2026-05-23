@@ -94,6 +94,26 @@ describe('useTabStore', () => {
     expect(useTabStore.getState().cursor.beatIndex).toBe(3);
   });
 
+  it('should add a beat when moving right in an incomplete measure', () => {
+    const { deleteBeat, moveCursor, setCursor } = useTabStore.getState();
+    
+    // Default 4/4 has 4 beats. Delete one to make it incomplete (3/4 filled).
+    deleteBeat(0, 0);
+    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(3);
+    
+    // Set cursor to the last beat (index 2)
+    setCursor({ measureIndex: 0, beatIndex: 2 });
+    
+    // Move right
+    moveCursor('right');
+    
+    const state = useTabStore.getState();
+    // Should have added a beat instead of moving to next or staying
+    expect(state.song.measures[0].beats).toHaveLength(4);
+    expect(state.cursor.measureIndex).toBe(0);
+    expect(state.cursor.beatIndex).toBe(3);
+  });
+
   it('should set a note at specific coordinates', () => {
     const { setNote } = useTabStore.getState();
     setNote(0, 0, 0, 5);

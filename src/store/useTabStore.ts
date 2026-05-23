@@ -102,8 +102,24 @@ export const useTabStore = create<TabState>((set) => ({
     }
     
     if (direction === 'right') {
-      if (beatIndex < song.measures[measureIndex].beats.length - 1) {
+      const measure = song.measures[measureIndex];
+      const expectedDuration = song.timeSignature[0] * (4 / song.timeSignature[1]);
+      const currentDuration = measure.beats.reduce((sum, b) => sum + b.duration, 0);
+
+      if (beatIndex < measure.beats.length - 1) {
         beatIndex++;
+      } else if (currentDuration < expectedDuration - 0.001) {
+        // Measure not full yet, add a beat instead of moving to next measure
+        const newMeasures = [...song.measures];
+        const newMeasure = { 
+          ...measure, 
+          beats: [...measure.beats, { duration: 1, isRest: true, notes: [] }] 
+        };
+        newMeasures[measureIndex] = newMeasure;
+        return {
+          song: { ...song, measures: newMeasures },
+          cursor: { ...cursor, beatIndex: beatIndex + 1 }
+        };
       } else if (measureIndex < song.measures.length - 1) {
         measureIndex++;
         beatIndex = 0;
