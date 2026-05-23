@@ -131,4 +131,43 @@ describe('useTabStore', () => {
     updateTimeSignature(3, 4);
     expect(useTabStore.getState().song.timeSignature).toEqual([3, 4]);
   });
+
+  it('should toggle a beat to rest', () => {
+    const { setNote, toggleRest } = useTabStore.getState();
+    setNote(0, 0, 0, 5);
+    toggleRest(0, 0);
+    expect(useTabStore.getState().song.measures[0].beats[0].isRest).toBe(true);
+    expect(useTabStore.getState().song.measures[0].beats[0].notes).toHaveLength(0);
+  });
+
+  it('should add a beat at specific position', () => {
+    const { addBeat } = useTabStore.getState();
+    addBeat(0, 0);
+    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(5);
+    // Should insert AFTER the current beat
+    expect(useTabStore.getState().song.measures[0].beats[1].isRest).toBe(true);
+  });
+
+  it('should delete a beat', () => {
+    const { deleteBeat } = useTabStore.getState();
+    deleteBeat(0, 0);
+    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(3);
+  });
+
+  it('should not delete the last beat of a measure', () => {
+    const { deleteBeat } = useTabStore.getState();
+    // initial measure has 4 beats
+    deleteBeat(0, 0);
+    deleteBeat(0, 0);
+    deleteBeat(0, 0);
+    deleteBeat(0, 0); // 4th attempt to delete
+    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(1);
+  });
+
+  it('should adjust cursor if it was on the deleted beat', () => {
+    const { deleteBeat, setCursor } = useTabStore.getState();
+    setCursor({ measureIndex: 0, beatIndex: 3 });
+    deleteBeat(0, 3);
+    expect(useTabStore.getState().cursor.beatIndex).toBe(2);
+  });
 });

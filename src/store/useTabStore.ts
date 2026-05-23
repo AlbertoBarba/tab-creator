@@ -18,6 +18,10 @@ interface TabState {
   setNote: (measureIndex: number, beatIndex: number, stringIndex: number, fret: number) => void;
   deleteNote: (measureIndex: number, beatIndex: number, stringIndex: number) => void;
   setDuration: (measureIndex: number, beatIndex: number, duration: number) => void;
+  updateTimeSignature: (num: number, den: number) => void;
+  toggleRest: (mIdx: number, bIdx: number) => void;
+  addBeat: (mIdx: number, bIdx: number) => void;
+  deleteBeat: (mIdx: number, bIdx: number) => void;
 }
 
 export const initialSong: Song = {
@@ -175,4 +179,41 @@ export const useTabStore = create<TabState>((set) => ({
   updateTimeSignature: (num, den) => set((state) => ({
     song: { ...state.song, timeSignature: [num, den] }
   })),
+  toggleRest: (mIdx, bIdx) => set((state) => {
+    const newMeasures = [...state.song.measures];
+    const measure = { ...newMeasures[mIdx] };
+    const beats = [...measure.beats];
+    beats[bIdx] = { ...beats[bIdx], isRest: true, notes: [] };
+    measure.beats = beats;
+    newMeasures[mIdx] = measure;
+    return { song: { ...state.song, measures: newMeasures } };
+  }),
+  addBeat: (mIdx, bIdx) => set((state) => {
+    const newMeasures = [...state.song.measures];
+    const measure = { ...newMeasures[mIdx] };
+    const beats = [...measure.beats];
+    const newBeat = { duration: 1, isRest: true, notes: [] };
+    beats.splice(bIdx + 1, 0, newBeat); // Insert after current
+    measure.beats = beats;
+    newMeasures[mIdx] = measure;
+    return { song: { ...state.song, measures: newMeasures } };
+  }),
+  deleteBeat: (mIdx, bIdx) => set((state) => {
+    const newMeasures = [...state.song.measures];
+    const measure = { ...newMeasures[mIdx] };
+    const beats = [...measure.beats];
+    if (beats.length <= 1) return state; // Keep at least one beat
+    beats.splice(bIdx, 1);
+    measure.beats = beats;
+    newMeasures[mIdx] = measure;
+    
+    // Adjust cursor if it was on the deleted beat
+    let { beatIndex } = state.cursor;
+    if (beatIndex >= beats.length) beatIndex = Math.max(0, beats.length - 1);
+    
+    return { 
+      song: { ...state.song, measures: newMeasures },
+      cursor: { ...state.cursor, beatIndex }
+    };
+  }),
 }));
