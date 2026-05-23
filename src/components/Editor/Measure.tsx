@@ -6,18 +6,19 @@ interface Props {
   measure: Measure;
   index: number;
   tuningCount: number;
+  x: number;
+  y: number;
 }
 
-export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount }) => {
+export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount, x, y }) => {
   const lineSpacing = 20;
   const measureWidth = 300;
-  const startY = 100 + index * 150; // Simple vertical stacking for now
 
   const cursor = useTabStore((state) => state.cursor);
   const isSelectedMeasure = cursor.measureIndex === index;
 
   return (
-    <g transform={`translate(50, ${startY})`}>
+    <g transform={`translate(${x}, ${y})`}>
       {/* Horizontal String Lines */}
       {Array.from({ length: tuningCount }).map((_, i) => (
         <line
@@ -80,7 +81,7 @@ export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount }
 
       {isSelectedMeasure && (
         <rect
-          x={(measureWidth / (measure.beats.length || 1)) * cursor.beatIndex - 10}
+          x={(measureWidth / (measure.beats.length || 1)) * cursor.beatIndex + (measureWidth / (measure.beats.length || 1)) / 2 - 10}
           y={cursor.stringIndex * lineSpacing - 10}
           width={20}
           height={20}

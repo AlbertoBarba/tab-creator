@@ -7,6 +7,9 @@ export const useKeyboardEditor = () => {
   const deleteNote = useTabStore((state) => state.deleteNote);
   const cursor = useTabStore((state) => state.cursor);
 
+  const addMeasure = useTabStore((state) => state.addMeasure);
+  const deleteMeasure = useTabStore((state) => state.deleteMeasure);
+
   const bufferRef = useRef<string>('');
   const timeoutRef = useRef<number | null>(null);
 
@@ -17,6 +20,18 @@ export const useKeyboardEditor = () => {
         bufferRef.current = '';
         if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
         moveCursor(e.key.replace('Arrow', '').toLowerCase() as any);
+        return;
+      }
+
+      // Add measure
+      if (e.key === 'Enter' || e.key === '+') {
+        addMeasure();
+        return;
+      }
+
+      // Delete measure
+      if (e.shiftKey && (e.key === 'Backspace' || e.key === 'Delete')) {
+        deleteMeasure(cursor.measureIndex);
         return;
       }
 
