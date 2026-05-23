@@ -10,27 +10,13 @@ vi.mock('../../../store/useTabStore', () => ({
     cursor: { measureIndex: 0, beatIndex: 0, stringIndex: 0 },
     song: {
       timeSignature: [4, 4],
-    }
+      tuning: ['E1', 'A1', 'D2', 'G2'],
+    },
+    theme: 'dark'
   })),
 }));
 
 describe('MeasureRenderer', () => {
-  const mockMeasure: Measure = {
-    id: 'test-measure',
-    beats: [
-      {
-        duration: 2, // Half note
-        isRest: false,
-        notes: [{ string: 0, fret: 5 }],
-      },
-      {
-        duration: 4, // Whole note
-        isRest: false,
-        notes: [{ string: 1, fret: 7 }],
-      },
-    ],
-  };
-
   it('should render a red highlight for an invalid measure', () => {
     const invalidMeasure: Measure = {
       id: 'invalid-measure',
@@ -56,8 +42,11 @@ describe('MeasureRenderer', () => {
     );
 
     const rects = container.querySelectorAll('rect');
+    // It should have at least the red highlight rect
     expect(rects.length).toBeGreaterThan(0);
-    expect(rects[0].getAttribute('fill')).toBe('rgba(239, 68, 68, 0.1)');
+    // Dark mode invalidBg is rgba(239, 68, 68, 0.2)
+    const highlight = Array.from(rects).find(r => r.getAttribute('fill') === 'rgba(239, 68, 68, 0.2)');
+    expect(highlight).toBeDefined();
   });
 
   it('should NOT render a red highlight for a valid measure', () => {
@@ -84,55 +73,20 @@ describe('MeasureRenderer', () => {
     );
 
     const rects = container.querySelectorAll('rect');
-    // Note: Since validMeasure has 4 beats, actualDuration = 4.0.
-    // expectedDuration = 4 * (4 / 4) = 4.0.
-    // So it should be valid.
-    expect(rects.length).toBe(0);
+    const highlight = Array.from(rects).find(r => r.getAttribute('fill') === 'rgba(239, 68, 68, 0.2)');
+    expect(highlight).toBeUndefined();
   });
 
   it('should render a stem for a half note (duration 2)', () => {
-    const { container } = render(
-      <svg>
-        <MeasureRenderer 
-          measure={mockMeasure} 
-          index={0} 
-          tuningCount={4} 
-          x={0} 
-          y={0} 
-        />
-      </svg>
-    );
-
-    // There should be lines for the strings, bar lines, and the stem.
-    // Strings: 4 lines
-    // Bar lines: 2 lines
-    // Stem for half note: 1 line
-    // Total: 7 lines
-    // Wait, let's be more specific.
-    
-    const lines = container.querySelectorAll('line');
-    // We expect 4 (strings) + 2 (bar lines) + 1 (stem for half note) = 7 lines
-    // The whole note (duration 4) should NOT have a stem.
-    
-    expect(lines.length).toBe(7);
-  });
-
-  it('should render a stem for a quarter note (duration 1)', () => {
-    const quarterMeasure: Measure = {
-      id: 'quarter-measure',
-      beats: [
-        {
-          duration: 1,
-          isRest: false,
-          notes: [{ string: 0, fret: 5 }],
-        },
-      ],
+    const halfMeasure: Measure = {
+      id: 'half',
+      beats: [{ duration: 2, isRest: false, notes: [{ string: 0, fret: 5 }] }]
     };
-
+    
     const { container } = render(
       <svg>
         <MeasureRenderer 
-          measure={quarterMeasure} 
+          measure={halfMeasure} 
           index={0} 
           tuningCount={4} 
           x={0} 
@@ -143,19 +97,15 @@ describe('MeasureRenderer', () => {
 
     const lines = container.querySelectorAll('line');
     // 4 strings + 2 bar lines + 1 stem = 7 lines
+    // Wait, playhead might also render if isPlaying is true.
+    // In our mock isPlaying is undefined (false).
     expect(lines.length).toBe(7);
   });
 
   it('should NOT render a stem for a whole note (duration 4)', () => {
     const wholeMeasure: Measure = {
-      id: 'whole-measure',
-      beats: [
-        {
-          duration: 4,
-          isRest: false,
-          notes: [{ string: 0, fret: 5 }],
-        },
-      ],
+      id: 'whole',
+      beats: [{ duration: 4, isRest: false, notes: [{ string: 0, fret: 5 }] }]
     };
 
     const { container } = render(

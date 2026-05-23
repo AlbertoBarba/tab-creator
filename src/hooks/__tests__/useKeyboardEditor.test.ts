@@ -23,8 +23,13 @@ describe('useKeyboardEditor', () => {
       addBeat: vi.fn(),
       deleteBeat: vi.fn(),
       cursor: { measureIndex: 0, beatIndex: 0, stringIndex: 0 },
+      song: {
+        measures: [{ beats: [{ duration: 1, isRest: false, notes: [] }] }]
+      }
     };
-    (useTabStore as any).mockImplementation((selector: any) => selector(storeState));
+    (useTabStore as any).mockImplementation((selector: any) => 
+      selector ? selector(storeState) : storeState
+    );
   });
 
   afterEach(() => {
@@ -127,28 +132,35 @@ describe('useKeyboardEditor', () => {
     renderHook(() => useKeyboardEditor());
     const event = new KeyboardEvent('keydown', { key: 'ArrowUp' });
     window.dispatchEvent(event);
-    expect(storeState.moveCursor).toHaveBeenCalledWith('up');
+    expect(storeState.moveCursor).toHaveBeenCalledWith('up', false);
   });
 
   it('should call moveCursor("down") when ArrowDown is pressed', () => {
     renderHook(() => useKeyboardEditor());
     const event = new KeyboardEvent('keydown', { key: 'ArrowDown' });
     window.dispatchEvent(event);
-    expect(storeState.moveCursor).toHaveBeenCalledWith('down');
+    expect(storeState.moveCursor).toHaveBeenCalledWith('down', false);
   });
 
   it('should call moveCursor("left") when ArrowLeft is pressed', () => {
     renderHook(() => useKeyboardEditor());
     const event = new KeyboardEvent('keydown', { key: 'ArrowLeft' });
     window.dispatchEvent(event);
-    expect(storeState.moveCursor).toHaveBeenCalledWith('left');
+    expect(storeState.moveCursor).toHaveBeenCalledWith('left', false);
   });
 
   it('should call moveCursor("right") when ArrowRight is pressed', () => {
     renderHook(() => useKeyboardEditor());
     const event = new KeyboardEvent('keydown', { key: 'ArrowRight' });
     window.dispatchEvent(event);
-    expect(storeState.moveCursor).toHaveBeenCalledWith('right');
+    expect(storeState.moveCursor).toHaveBeenCalledWith('right', false);
+  });
+
+  it('should call moveCursor with shiftKey: true when Shift+Arrow is pressed', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'ArrowRight', shiftKey: true });
+    window.dispatchEvent(event);
+    expect(storeState.moveCursor).toHaveBeenCalledWith('right', true);
   });
 
   it('should call setNote with single digit fret', () => {
@@ -183,17 +195,17 @@ describe('useKeyboardEditor', () => {
     expect(storeState.setNote).toHaveBeenLastCalledWith(0, 0, 0, 5);
   });
 
-  it('should call deleteNote when Backspace is pressed', () => {
+  it('should call deleteBeat when Backspace is pressed', () => {
     renderHook(() => useKeyboardEditor());
     const event = new KeyboardEvent('keydown', { key: 'Backspace' });
     window.dispatchEvent(event);
-    expect(storeState.deleteNote).toHaveBeenCalledWith(0, 0, 0);
+    expect(storeState.deleteBeat).toHaveBeenCalledWith(0, 0);
   });
 
-  it('should call deleteNote when Delete is pressed', () => {
+  it('should call deleteBeat when Delete is pressed', () => {
     renderHook(() => useKeyboardEditor());
     const event = new KeyboardEvent('keydown', { key: 'Delete' });
     window.dispatchEvent(event);
-    expect(storeState.deleteNote).toHaveBeenCalledWith(0, 0, 0);
+    expect(storeState.deleteBeat).toHaveBeenCalledWith(0, 0);
   });
 });

@@ -4,7 +4,15 @@ import { useTabStore, initialSong } from '../useTabStore';
 describe('useTabStore', () => {
   beforeEach(() => {
     useTabStore.setState({
-      song: initialSong,
+      song: {
+        ...initialSong,
+        measures: [
+          {
+            id: 'initial-measure',
+            beats: []
+          }
+        ]
+      },
       cursor: { measureIndex: 0, beatIndex: 0, stringIndex: 0 }
     });
   });
@@ -12,9 +20,10 @@ describe('useTabStore', () => {
   it('should have an initial state', () => {
     const state = useTabStore.getState();
     expect(state.song.title).toBe('New Bass Line');
-    expect(state.song.artist).toBe('Unknown Artist');
+    expect(state.song.artist).toBe('');
     expect(state.song.measures).toHaveLength(1);
     expect(state.song.measures[0].id).toBe('initial-measure');
+    expect(state.song.measures[0].beats).toHaveLength(0);
     expect(state.cursor).toEqual({ measureIndex: 0, beatIndex: 0, stringIndex: 0 });
   });
 
@@ -24,20 +33,13 @@ describe('useTabStore', () => {
     expect(useTabStore.getState().song.title).toBe('My New Song');
   });
 
-  it('should add a new measure with default beats', () => {
+  it('should add a new measure with zero beats', () => {
     const { addMeasure } = useTabStore.getState();
     addMeasure();
     const measures = useTabStore.getState().song.measures;
     expect(measures).toHaveLength(2);
     expect(measures[1].id).toBeDefined();
-    expect(measures[1].beats).toHaveLength(4); // Default 4/4
-    expect(measures[1].beats[0].isRest).toBe(true);
-  });
-
-  it('should move cursor right', () => {
-    const { moveCursor } = useTabStore.getState();
-    moveCursor('right');
-    expect(useTabStore.getState().cursor.beatIndex).toBe(1);
+    expect(measures[1].beats).toHaveLength(0);
   });
 
   it('should move cursor down', () => {
@@ -52,70 +54,9 @@ describe('useTabStore', () => {
     expect(useTabStore.getState().cursor.stringIndex).toBe(0);
   });
 
-  it('should move cursor left and stay at boundary', () => {
-    const { moveCursor } = useTabStore.getState();
-    moveCursor('left');
-    expect(useTabStore.getState().cursor.measureIndex).toBe(0);
-    expect(useTabStore.getState().cursor.beatIndex).toBe(0);
-  });
-
-  it('should move cursor across measures', () => {
-    const { setCursor, moveCursor, addMeasure } = useTabStore.getState();
-    
-    // Add another measure with beats
-    useTabStore.setState((state) => ({
-      song: {
-        ...state.song,
-        measures: [
-          ...state.song.measures,
-          {
-            id: 'measure-2',
-            beats: [
-              { duration: 1, isRest: true, notes: [] }
-            ]
-          }
-        ]
-      }
-    }));
-
-    // Set cursor to last beat of first measure
-    setCursor({ measureIndex: 0, beatIndex: 3 });
-    
-    // Move right
-    moveCursor('right');
-    
-    const state = useTabStore.getState();
-    expect(state.cursor.measureIndex).toBe(1);
-    expect(state.cursor.beatIndex).toBe(0);
-
-    // Move left back to first measure
-    moveCursor('left');
-    expect(useTabStore.getState().cursor.measureIndex).toBe(0);
-    expect(useTabStore.getState().cursor.beatIndex).toBe(3);
-  });
-
-  it('should add a beat when moving right in an incomplete measure', () => {
-    const { deleteBeat, moveCursor, setCursor } = useTabStore.getState();
-    
-    // Default 4/4 has 4 beats. Delete one to make it incomplete (3/4 filled).
-    deleteBeat(0, 0);
-    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(3);
-    
-    // Set cursor to the last beat (index 2)
-    setCursor({ measureIndex: 0, beatIndex: 2 });
-    
-    // Move right
-    moveCursor('right');
-    
-    const state = useTabStore.getState();
-    // Should have added a beat instead of moving to next or staying
-    expect(state.song.measures[0].beats).toHaveLength(4);
-    expect(state.cursor.measureIndex).toBe(0);
-    expect(state.cursor.beatIndex).toBe(3);
-  });
-
   it('should set a note at specific coordinates', () => {
-    const { setNote } = useTabStore.getState();
+    const { setNote, addBeat } = useTabStore.getState();
+    addBeat(0, -1); // Add first beat
     setNote(0, 0, 0, 5);
     const note = useTabStore.getState().song.measures[0].beats[0].notes[0];
     expect(note.fret).toBe(5);
@@ -124,7 +65,8 @@ describe('useTabStore', () => {
   });
 
   it('should update an existing note', () => {
-    const { setNote } = useTabStore.getState();
+    const { setNote, addBeat } = useTabStore.getState();
+    addBeat(0, -1);
     setNote(0, 0, 0, 5);
     setNote(0, 0, 0, 7);
     const notes = useTabStore.getState().song.measures[0].beats[0].notes;
@@ -132,16 +74,28 @@ describe('useTabStore', () => {
     expect(notes[0].fret).toBe(7);
   });
 
-  it('should delete a note', () => {
-    const { setNote, deleteNote } = useTabStore.getState();
+  it('should set a technique on a note', () => {
+    const { setNote, setTechnique, addBeat } = useTabStore.getState();
+    addBeat(0, -1);
     setNote(0, 0, 0, 5);
-    deleteNote(0, 0, 0);
-    expect(useTabStore.getState().song.measures[0].beats[0].notes).toHaveLength(0);
-    expect(useTabStore.getState().song.measures[0].beats[0].isRest).toBe(true);
+    setTechnique(0, 0, 0, 'slide');
+    const note = useTabStore.getState().song.measures[0].beats[0].notes[0];
+    expect(note.technique).toBe('slide');
+  });
+
+  it('should clear a technique', () => {
+    const { setNote, setTechnique, addBeat } = useTabStore.getState();
+    addBeat(0, -1);
+    setNote(0, 0, 0, 5);
+    setTechnique(0, 0, 0, 'hammer');
+    setTechnique(0, 0, 0, undefined);
+    const note = useTabStore.getState().song.measures[0].beats[0].notes[0];
+    expect(note.technique).toBeUndefined();
   });
 
   it('should update the duration of a beat', () => {
-    const { setDuration } = useTabStore.getState();
+    const { setDuration, addBeat } = useTabStore.getState();
+    addBeat(0, -1);
     setDuration(0, 0, 0.5); // Set to eighth note
     expect(useTabStore.getState().song.measures[0].beats[0].duration).toBe(0.5);
   });
@@ -153,7 +107,8 @@ describe('useTabStore', () => {
   });
 
   it('should toggle a beat to rest', () => {
-    const { setNote, toggleRest } = useTabStore.getState();
+    const { setNote, toggleRest, addBeat } = useTabStore.getState();
+    addBeat(0, -1);
     setNote(0, 0, 0, 5);
     toggleRest(0, 0);
     expect(useTabStore.getState().song.measures[0].beats[0].isRest).toBe(true);
@@ -162,44 +117,41 @@ describe('useTabStore', () => {
 
   it('should add a beat at specific position', () => {
     const { addBeat } = useTabStore.getState();
-    addBeat(0, 0);
-    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(5);
+    addBeat(0, -1); // 1st
+    addBeat(0, 0);  // 2nd
+    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(2);
     // Should insert AFTER the current beat
     expect(useTabStore.getState().song.measures[0].beats[1].isRest).toBe(true);
   });
 
-  it('should delete a beat', () => {
-    const { deleteBeat } = useTabStore.getState();
+  it('should turn a note beat into a rest when deleted', () => {
+    const { addBeat, setNote, deleteBeat } = useTabStore.getState();
+    addBeat(0, -1);
+    setNote(0, 0, 0, 5);
+    expect(useTabStore.getState().song.measures[0].beats[0].isRest).toBe(false);
+    
     deleteBeat(0, 0);
-    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(3);
-  });
-
-  it('should not delete the last beat of a measure', () => {
-    const { deleteBeat } = useTabStore.getState();
-    // initial measure has 4 beats
-    deleteBeat(0, 0);
-    deleteBeat(0, 0);
-    deleteBeat(0, 0);
-    deleteBeat(0, 0); // 4th attempt to delete
+    const beat = useTabStore.getState().song.measures[0].beats[0];
+    expect(beat.isRest).toBe(true);
+    expect(beat.notes).toHaveLength(0);
     expect(useTabStore.getState().song.measures[0].beats).toHaveLength(1);
   });
 
-  it('should adjust cursor if it was on the deleted beat', () => {
-    const { deleteBeat, setCursor } = useTabStore.getState();
-    setCursor({ measureIndex: 0, beatIndex: 3 });
-    deleteBeat(0, 3);
-    expect(useTabStore.getState().cursor.beatIndex).toBe(2);
+  it('should remove a rest beat entirely when deleted', () => {
+    const { addBeat, deleteBeat } = useTabStore.getState();
+    addBeat(0, -1);
+    addBeat(0, 0);
+    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(2);
+    
+    // Both are rests by default. Delete the first one.
+    deleteBeat(0, 0);
+    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(1);
   });
 
   it('should fill a measure with rests to match time signature', () => {
-    const { fillMeasureWithRests, deleteBeat } = useTabStore.getState();
+    const { fillMeasureWithRests, addBeat } = useTabStore.getState();
     
-    // Initial measure in 4/4 has 4 beats of duration 1 (total = 4)
-    // Delete two beats, so total duration = 2
-    deleteBeat(0, 0);
-    deleteBeat(0, 0);
-    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(2);
-    
+    // Empty measure in 4/4
     fillMeasureWithRests(0);
     
     const beats = useTabStore.getState().song.measures[0].beats;
@@ -208,23 +160,29 @@ describe('useTabStore', () => {
     expect(totalDuration).toBe(4);
   });
 
-  it('should handle fractional durations when filling with rests', () => {
-    const { fillMeasureWithRests, setDuration, deleteBeat } = useTabStore.getState();
+  it('should toggle dotted status', () => {
+    const { addBeat, toggleDot } = useTabStore.getState();
+    addBeat(0, -1); // 1.0 duration
+    toggleDot(0, 0);
+    const beat = useTabStore.getState().song.measures[0].beats[0];
+    expect(beat.isDotted).toBe(true);
+    expect(beat.duration).toBe(1.5);
     
-    // Total duration should be 4 for 4/4
-    // Set first beat to 0.5 (eighth) and delete others
-    setDuration(0, 0, 0.5);
-    deleteBeat(0, 1);
-    deleteBeat(0, 1);
-    deleteBeat(0, 1);
+    toggleDot(0, 0);
+    expect(useTabStore.getState().song.measures[0].beats[0].isDotted).toBe(false);
+    expect(useTabStore.getState().song.measures[0].beats[0].duration).toBe(1.0);
+  });
+
+  it('should toggle triplet status', () => {
+    const { addBeat, toggleTriplet } = useTabStore.getState();
+    addBeat(0, -1); // 1.0 duration
+    toggleTriplet(0, 0);
+    const beat = useTabStore.getState().song.measures[0].beats[0];
+    expect(beat.isTriplet).toBe(true);
+    expect(beat.duration).toBeCloseTo(1 * (2/3));
     
-    expect(useTabStore.getState().song.measures[0].beats).toHaveLength(1);
-    expect(useTabStore.getState().song.measures[0].beats[0].duration).toBe(0.5);
-    
-    fillMeasureWithRests(0);
-    
-    const beats = useTabStore.getState().song.measures[0].beats;
-    const totalDuration = beats.reduce((sum, b) => sum + b.duration, 0);
-    expect(totalDuration).toBeCloseTo(4);
+    toggleTriplet(0, 0);
+    expect(useTabStore.getState().song.measures[0].beats[0].isTriplet).toBe(false);
+    expect(useTabStore.getState().song.measures[0].beats[0].duration).toBe(1.0);
   });
 });

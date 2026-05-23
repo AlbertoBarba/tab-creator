@@ -8,6 +8,8 @@ export interface Beat {
   duration: number; // 1 = quarter, 0.5 = eighth, etc.
   isRest: boolean;
   notes: Note[];
+  isDotted?: boolean;
+  isTriplet?: boolean;
 }
 
 export interface Measure {
