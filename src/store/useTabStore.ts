@@ -1,13 +1,22 @@
 import { create } from 'zustand';
 import { Song } from '../types/tab';
 
-interface TabState {
-  song: Song;
-  updateTitle: (title: string) => void;
-  addMeasure: () => void;
+export interface Cursor {
+  measureIndex: number;
+  beatIndex: number;
+  stringIndex: number;
 }
 
-const initialSong: Song = {
+interface TabState {
+  song: Song;
+  cursor: Cursor;
+  updateTitle: (title: string) => void;
+  addMeasure: () => void;
+  setCursor: (cursor: Partial<Cursor>) => void;
+  moveCursor: (direction: 'up' | 'down' | 'left' | 'right') => void;
+}
+
+export const initialSong: Song = {
   title: 'New Bass Line',
   artist: 'Unknown Artist',
   tempo: 120,
@@ -28,6 +37,7 @@ const initialSong: Song = {
 
 export const useTabStore = create<TabState>((set) => ({
   song: initialSong,
+  cursor: { measureIndex: 0, beatIndex: 0, stringIndex: 0 },
   updateTitle: (title) => set((state) => ({ song: { ...state.song, title } })),
   addMeasure: () => set((state) => ({
     song: {
@@ -38,4 +48,34 @@ export const useTabStore = create<TabState>((set) => ({
       ]
     }
   })),
+  setCursor: (newCursor) => set((state) => ({
+    cursor: { ...state.cursor, ...newCursor }
+  })),
+  moveCursor: (direction) => set((state) => {
+    const { cursor, song } = state;
+    let { measureIndex, beatIndex, stringIndex } = cursor;
+
+    if (direction === 'up') stringIndex = Math.max(0, stringIndex - 1);
+    if (direction === 'down') stringIndex = Math.min(song.tuning.length - 1, stringIndex + 1);
+    
+    if (direction === 'left') {
+      if (beatIndex > 0) {
+        beatIndex--;
+      } else if (measureIndex > 0) {
+        measureIndex--;
+        beatIndex = song.measures[measureIndex].beats.length - 1;
+      }
+    }
+    
+    if (direction === 'right') {
+      if (beatIndex < song.measures[measureIndex].beats.length - 1) {
+        beatIndex++;
+      } else if (measureIndex < song.measures.length - 1) {
+        measureIndex++;
+        beatIndex = 0;
+      }
+    }
+
+    return { cursor: { measureIndex, beatIndex, stringIndex } };
+  }),
 }));
