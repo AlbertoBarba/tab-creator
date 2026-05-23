@@ -1,5 +1,6 @@
 import React from 'react';
 import { Measure } from '../../types/tab';
+import { useTabStore } from '../../store/useTabStore';
 
 interface Props {
   measure: Measure;
@@ -11,6 +12,9 @@ export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount }
   const lineSpacing = 20;
   const measureWidth = 300;
   const startY = 100 + index * 150; // Simple vertical stacking for now
+
+  const cursor = useTabStore((state) => state.cursor);
+  const isSelectedMeasure = cursor.measureIndex === index;
 
   return (
     <g transform={`translate(50, ${startY})`}>
@@ -30,6 +34,17 @@ export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount }
       {/* Bar Lines */}
       <line x1={0} y1={0} x2={0} y2={(tuningCount - 1) * lineSpacing} stroke="black" strokeWidth="2" />
       <line x1={measureWidth} y1={0} x2={measureWidth} y2={(tuningCount - 1) * lineSpacing} stroke="black" strokeWidth="2" />
+
+      {isSelectedMeasure && (
+        <rect
+          x={(measureWidth / (measure.beats.length || 1)) * cursor.beatIndex - 10}
+          y={cursor.stringIndex * lineSpacing - 10}
+          width={20}
+          height={20}
+          fill="rgba(59, 130, 246, 0.3)"
+          rx={4}
+        />
+      )}
     </g>
   );
 };
