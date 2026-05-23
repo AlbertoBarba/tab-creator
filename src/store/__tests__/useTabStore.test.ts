@@ -24,13 +24,14 @@ describe('useTabStore', () => {
     expect(useTabStore.getState().song.title).toBe('My New Song');
   });
 
-  it('should add a new measure', () => {
+  it('should add a new measure with default beats', () => {
     const { addMeasure } = useTabStore.getState();
     addMeasure();
     const measures = useTabStore.getState().song.measures;
     expect(measures).toHaveLength(2);
     expect(measures[1].id).toBeDefined();
-    expect(measures[1].beats).toEqual([]);
+    expect(measures[1].beats).toHaveLength(4); // Default 4/4
+    expect(measures[1].beats[0].isRest).toBe(true);
   });
 
   it('should move cursor right', () => {
@@ -117,5 +118,11 @@ describe('useTabStore', () => {
     deleteNote(0, 0, 0);
     expect(useTabStore.getState().song.measures[0].beats[0].notes).toHaveLength(0);
     expect(useTabStore.getState().song.measures[0].beats[0].isRest).toBe(true);
+  });
+
+  it('should update the duration of a beat', () => {
+    const { setDuration } = useTabStore.getState();
+    setDuration(0, 0, 0.5); // Set to eighth note
+    expect(useTabStore.getState().song.measures[0].beats[0].duration).toBe(0.5);
   });
 });
