@@ -38,6 +38,9 @@ export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount, 
 
       {measure.beats.map((beat, bIdx) => {
         const beatWidth = measureWidth / (measure.beats.length || 1);
+        const stemY1 = (tuningCount - 0.5) * lineSpacing; // Start just below the last string
+        const stemY2 = stemY1 + 30; // 30px stem length
+
         return (
           <g key={bIdx} transform={`translate(${bIdx * beatWidth + beatWidth / 2}, 0)`}>
             {!beat.isRest && beat.notes.map((note) => (
@@ -74,6 +77,28 @@ export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount, 
               >
                 /
               </text>
+            )}
+
+            {/* Rhythmic Stem */}
+            {!beat.isRest && beat.duration <= 1 && (
+              <line
+                x1={0}
+                y1={stemY1}
+                x2={0}
+                y2={stemY2}
+                stroke="black"
+                strokeWidth="1.5"
+              />
+            )}
+
+            {/* Eighth Note Flag/Beam (simplified for now as individual flags) */}
+            {!beat.isRest && beat.duration === 0.5 && (
+              <path
+                d={`M 0 ${stemY2} L 8 ${stemY2 - 5}`}
+                stroke="black"
+                strokeWidth="1.5"
+                fill="none"
+              />
             )}
           </g>
         );
