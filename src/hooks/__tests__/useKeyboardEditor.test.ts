@@ -7,6 +7,7 @@ vi.mock('../../store/useTabStore', () => ({
   useTabStore: vi.fn(),
 }));
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 describe('useKeyboardEditor', () => {
   let storeState: any;
 

@@ -39,8 +39,6 @@ export const useAudioEngine = () => {
 
     song.measures.forEach((measure, mIdx) => {
       measure.beats.forEach((beat, bIdx) => {
-        const duration = beat.duration * (60 / song.tempo);
-        
         // Schedule sound
         if (!beat.isRest) {
           beat.notes.forEach(note => {

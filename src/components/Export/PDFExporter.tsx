@@ -33,13 +33,14 @@ const PDFMeasure: React.FC<PDFMeasureProps> = ({ measure, width, tuningCount, ti
   const actualDuration = measure.beats.reduce((sum, beat) => sum + beat.duration, 0);
   const measureSvgWidth = Math.max(width, actualDuration * pixelsPerDuration);
 
-  let currentX = 0;
-  const beatPositions = measure.beats.map((beat) => {
-    const xPos = currentX;
+  // Pre-calculate beat positions
+  const beatPositions = measure.beats.reduce((acc, beat) => {
+    const xPos = acc.currentX;
     const beatWidth = beat.duration * pixelsPerDuration;
-    currentX += beatWidth;
-    return { x: xPos, width: beatWidth };
-  });
+    acc.positions.push({ x: xPos, width: beatWidth });
+    acc.currentX += beatWidth;
+    return acc;
+  }, { positions: [] as { x: number, width: number }[], currentX: 0 }).positions;
 
   const renderRest = (beat: Beat, centerX: number, color: string) => {
     const duration = beat.duration;

@@ -43,8 +43,7 @@ export const useKeyboardEditor = () => {
       if (e.key.startsWith('Arrow')) {
         bufferRef.current = '';
         if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
-        moveCursor(e.key.replace('Arrow', '').toLowerCase() as any, e.shiftKey);
-        return;
+        moveCursor(e.key.replace('Arrow', '').toLowerCase() as 'up' | 'down' | 'left' | 'right', e.shiftKey);        return;
       }
 
       // Copy/Paste

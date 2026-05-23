@@ -149,7 +149,7 @@ describe('useTabStore', () => {
   });
 
   it('should fill a measure with rests to match time signature', () => {
-    const { fillMeasureWithRests, addBeat } = useTabStore.getState();
+    const { fillMeasureWithRests } = useTabStore.getState();
     
     // Empty measure in 4/4
     fillMeasureWithRests(0);

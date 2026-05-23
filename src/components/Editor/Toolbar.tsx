@@ -95,7 +95,7 @@ export const Toolbar: React.FC = () => {
       try {
         const loadedSong = JSON.parse(event.target?.result as string);
         loadSong(loadedSong);
-      } catch (err) {
+      } catch {
         alert('Failed to load file. Invalid format.');
       }
     };

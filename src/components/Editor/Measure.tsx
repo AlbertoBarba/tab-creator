@@ -94,13 +94,13 @@ export const MeasureRenderer: React.FC<Props> = ({ measure, index, tuningCount, 
   const actualNumerator = Math.round(actualDuration / (4 / song.timeSignature[1]));
 
   // Pre-calculate beat positions
-  let currentX = 0;
-  const beatPositions = measure.beats.map((beat) => {
-    const xPos = currentX;
+  const beatPositions = measure.beats.reduce((acc, beat) => {
+    const xPos = acc.currentX;
     const width = beat.duration * pixelsPerDuration;
-    currentX += width;
-    return { x: xPos, width };
-  });
+    acc.positions.push({ x: xPos, width });
+    acc.currentX += width;
+    return acc;
+  }, { positions: [] as { x: number, width: number }[], currentX: 0 }).positions;
 
   const playhead = useTabStore((state) => state.playhead);
   const isPlaying = useTabStore((state) => state.isPlaying);

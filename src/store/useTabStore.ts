@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Song, Beat } from '../types/tab';
+import { Song, Beat, Note } from '../types/tab';
 
 export interface Cursor {
   measureIndex: number;
@@ -114,7 +114,7 @@ export const useTabStore = create<TabState>((set) => ({
 
     const { cursor, song, clipboard } = state;
     const newMeasures = [...song.measures];
-    let currentM = cursor.measureIndex;
+    const currentM = cursor.measureIndex;
     let currentB = cursor.beatIndex;
 
     clipboard.forEach((beat) => {
@@ -383,7 +383,7 @@ export const useTabStore = create<TabState>((set) => ({
     const newNotes = [...beat.notes];
     const noteIndex = newNotes.findIndex(n => n.string === sIdx);
     if (noteIndex >= 0) {
-      newNotes[noteIndex] = { ...newNotes[noteIndex], technique: technique as any };
+      newNotes[noteIndex] = { ...newNotes[noteIndex], technique: technique as Note['technique'] };
       beat.notes = newNotes;
       beats[bIdx] = beat;
       measure.beats = beats;
