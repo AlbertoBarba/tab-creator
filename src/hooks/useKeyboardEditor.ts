@@ -10,6 +10,9 @@ export const useKeyboardEditor = () => {
 
   const addMeasure = useTabStore((state) => state.addMeasure);
   const deleteMeasure = useTabStore((state) => state.deleteMeasure);
+  const toggleRest = useTabStore((state) => state.toggleRest);
+  const addBeat = useTabStore((state) => state.addBeat);
+  const deleteBeat = useTabStore((state) => state.deleteBeat);
 
   const bufferRef = useRef<string>('');
   const timeoutRef = useRef<number | null>(null);
@@ -26,13 +29,31 @@ export const useKeyboardEditor = () => {
 
       // Add measure
       if (e.key === 'Enter' || e.key === '+') {
-        addMeasure();
-        return;
+        if (!e.altKey) {
+          addMeasure();
+          return;
+        }
       }
 
       // Delete measure
       if (e.shiftKey && (e.key === 'Backspace' || e.key === 'Delete')) {
         deleteMeasure(cursor.measureIndex);
+        return;
+      }
+
+      // Toggle Rest
+      if (e.key.toLowerCase() === 'r') {
+        toggleRest(cursor.measureIndex, cursor.beatIndex);
+        return;
+      }
+
+      // Add/Delete Beat
+      if (e.altKey && e.key === 'Enter') {
+        addBeat(cursor.measureIndex, cursor.beatIndex);
+        return;
+      }
+      if (e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
+        deleteBeat(cursor.measureIndex, cursor.beatIndex);
         return;
       }
 
@@ -83,5 +104,5 @@ export const useKeyboardEditor = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [moveCursor, setNote, deleteNote, cursor]);
+  }, [moveCursor, setNote, deleteNote, setDuration, addMeasure, deleteMeasure, cursor]);
 };

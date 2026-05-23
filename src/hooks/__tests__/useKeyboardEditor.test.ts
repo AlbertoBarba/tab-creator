@@ -17,6 +17,11 @@ describe('useKeyboardEditor', () => {
       setNote: vi.fn(),
       deleteNote: vi.fn(),
       setDuration: vi.fn(),
+      addMeasure: vi.fn(),
+      deleteMeasure: vi.fn(),
+      toggleRest: vi.fn(),
+      addBeat: vi.fn(),
+      deleteBeat: vi.fn(),
       cursor: { measureIndex: 0, beatIndex: 0, stringIndex: 0 },
     };
     (useTabStore as any).mockImplementation((selector: any) => selector(storeState));
@@ -25,6 +30,62 @@ describe('useKeyboardEditor', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.clearAllMocks();
+  });
+
+  it('should call addMeasure() when "Enter" is pressed without Alt', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'Enter' });
+    window.dispatchEvent(event);
+    expect(storeState.addMeasure).toHaveBeenCalled();
+  });
+
+  it('should call addMeasure() when "+" is pressed', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: '+' });
+    window.dispatchEvent(event);
+    expect(storeState.addMeasure).toHaveBeenCalled();
+  });
+
+  it('should call deleteMeasure(0) when Shift+Backspace is pressed', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'Backspace', shiftKey: true });
+    window.dispatchEvent(event);
+    expect(storeState.deleteMeasure).toHaveBeenCalledWith(0);
+  });
+
+  it('should call deleteMeasure(0) when Shift+Delete is pressed', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'Delete', shiftKey: true });
+    window.dispatchEvent(event);
+    expect(storeState.deleteMeasure).toHaveBeenCalledWith(0);
+  });
+
+  it('should call toggleRest(0, 0) when "r" is pressed', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'r' });
+    window.dispatchEvent(event);
+    expect(storeState.toggleRest).toHaveBeenCalledWith(0, 0);
+  });
+
+  it('should call addBeat(0, 0) when Alt+Enter is pressed', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'Enter', altKey: true });
+    window.dispatchEvent(event);
+    expect(storeState.addBeat).toHaveBeenCalledWith(0, 0);
+  });
+
+  it('should call deleteBeat(0, 0) when Alt+Backspace is pressed', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'Backspace', altKey: true });
+    window.dispatchEvent(event);
+    expect(storeState.deleteBeat).toHaveBeenCalledWith(0, 0);
+  });
+
+  it('should call deleteBeat(0, 0) when Alt+Delete is pressed', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'Delete', altKey: true });
+    window.dispatchEvent(event);
+    expect(storeState.deleteBeat).toHaveBeenCalledWith(0, 0);
   });
 
   it('should call setDuration(0, 0, 4) when "w" is pressed', () => {
