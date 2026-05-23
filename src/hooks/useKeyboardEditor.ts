@@ -5,6 +5,7 @@ export const useKeyboardEditor = () => {
   const moveCursor = useTabStore((state) => state.moveCursor);
   const setNote = useTabStore((state) => state.setNote);
   const deleteNote = useTabStore((state) => state.deleteNote);
+  const setDuration = useTabStore((state) => state.setDuration);
   const cursor = useTabStore((state) => state.cursor);
 
   const addMeasure = useTabStore((state) => state.addMeasure);
@@ -32,6 +33,20 @@ export const useKeyboardEditor = () => {
       // Delete measure
       if (e.shiftKey && (e.key === 'Backspace' || e.key === 'Delete')) {
         deleteMeasure(cursor.measureIndex);
+        return;
+      }
+
+      // Duration shortcuts
+      const durationMap: Record<string, number> = {
+        w: 4,
+        h: 2,
+        q: 1,
+        e: 0.5,
+      };
+
+      const key = e.key.toLowerCase();
+      if (durationMap[key]) {
+        setDuration(cursor.measureIndex, cursor.beatIndex, durationMap[key]);
         return;
       }
 

@@ -16,6 +16,7 @@ describe('useKeyboardEditor', () => {
       moveCursor: vi.fn(),
       setNote: vi.fn(),
       deleteNote: vi.fn(),
+      setDuration: vi.fn(),
       cursor: { measureIndex: 0, beatIndex: 0, stringIndex: 0 },
     };
     (useTabStore as any).mockImplementation((selector: any) => selector(storeState));
@@ -24,6 +25,41 @@ describe('useKeyboardEditor', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.clearAllMocks();
+  });
+
+  it('should call setDuration(0, 0, 4) when "w" is pressed', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'w' });
+    window.dispatchEvent(event);
+    expect(storeState.setDuration).toHaveBeenCalledWith(0, 0, 4);
+  });
+
+  it('should call setDuration(0, 0, 2) when "h" is pressed', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'h' });
+    window.dispatchEvent(event);
+    expect(storeState.setDuration).toHaveBeenCalledWith(0, 0, 2);
+  });
+
+  it('should call setDuration(0, 0, 1) when "q" is pressed', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'q' });
+    window.dispatchEvent(event);
+    expect(storeState.setDuration).toHaveBeenCalledWith(0, 0, 1);
+  });
+
+  it('should call setDuration(0, 0, 0.5) when "e" is pressed', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'e' });
+    window.dispatchEvent(event);
+    expect(storeState.setDuration).toHaveBeenCalledWith(0, 0, 0.5);
+  });
+
+  it('should be case-insensitive for duration shortcuts', () => {
+    renderHook(() => useKeyboardEditor());
+    const event = new KeyboardEvent('keydown', { key: 'W' });
+    window.dispatchEvent(event);
+    expect(storeState.setDuration).toHaveBeenCalledWith(0, 0, 4);
   });
 
   it('should call moveCursor("up") when ArrowUp is pressed', () => {
