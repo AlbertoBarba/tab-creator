@@ -14,6 +14,8 @@ interface TabState {
   addMeasure: () => void;
   setCursor: (cursor: Partial<Cursor>) => void;
   moveCursor: (direction: 'up' | 'down' | 'left' | 'right') => void;
+  setNote: (measureIndex: number, beatIndex: number, stringIndex: number, fret: number) => void;
+  deleteNote: (measureIndex: number, beatIndex: number, stringIndex: number) => void;
 }
 
 export const initialSong: Song = {
@@ -77,5 +79,44 @@ export const useTabStore = create<TabState>((set) => ({
     }
 
     return { cursor: { measureIndex, beatIndex, stringIndex } };
+  }),
+  setNote: (mIdx, bIdx, sIdx, fret) => set((state) => {
+    const newMeasures = [...state.song.measures];
+    const measure = { ...newMeasures[mIdx] };
+    const beats = [...measure.beats];
+    const beat = { ...beats[bIdx] };
+    
+    // Find if note on this string already exists, otherwise add it
+    const noteIndex = beat.notes.findIndex(n => n.string === sIdx);
+    const newNotes = [...beat.notes];
+    
+    if (noteIndex >= 0) {
+      newNotes[noteIndex] = { ...newNotes[noteIndex], fret };
+    } else {
+      newNotes.push({ string: sIdx, fret });
+    }
+    
+    beat.notes = newNotes;
+    beat.isRest = false;
+    beats[bIdx] = beat;
+    measure.beats = beats;
+    newMeasures[mIdx] = measure;
+    
+    return { song: { ...state.song, measures: newMeasures } };
+  }),
+  deleteNote: (mIdx, bIdx, sIdx) => set((state) => {
+    const newMeasures = [...state.song.measures];
+    const measure = { ...newMeasures[mIdx] };
+    const beats = [...measure.beats];
+    const beat = { ...beats[bIdx] };
+    
+    beat.notes = beat.notes.filter(n => n.string !== sIdx);
+    if (beat.notes.length === 0) beat.isRest = true;
+    
+    beats[bIdx] = beat;
+    measure.beats = beats;
+    newMeasures[mIdx] = measure;
+    
+    return { song: { ...state.song, measures: newMeasures } };
   }),
 }));

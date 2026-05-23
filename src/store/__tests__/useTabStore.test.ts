@@ -92,4 +92,30 @@ describe('useTabStore', () => {
     expect(useTabStore.getState().cursor.measureIndex).toBe(0);
     expect(useTabStore.getState().cursor.beatIndex).toBe(3);
   });
+
+  it('should set a note at specific coordinates', () => {
+    const { setNote } = useTabStore.getState();
+    setNote(0, 0, 0, 5);
+    const note = useTabStore.getState().song.measures[0].beats[0].notes[0];
+    expect(note.fret).toBe(5);
+    expect(note.string).toBe(0);
+    expect(useTabStore.getState().song.measures[0].beats[0].isRest).toBe(false);
+  });
+
+  it('should update an existing note', () => {
+    const { setNote } = useTabStore.getState();
+    setNote(0, 0, 0, 5);
+    setNote(0, 0, 0, 7);
+    const notes = useTabStore.getState().song.measures[0].beats[0].notes;
+    expect(notes).toHaveLength(1);
+    expect(notes[0].fret).toBe(7);
+  });
+
+  it('should delete a note', () => {
+    const { setNote, deleteNote } = useTabStore.getState();
+    setNote(0, 0, 0, 5);
+    deleteNote(0, 0, 0);
+    expect(useTabStore.getState().song.measures[0].beats[0].notes).toHaveLength(0);
+    expect(useTabStore.getState().song.measures[0].beats[0].isRest).toBe(true);
+  });
 });
