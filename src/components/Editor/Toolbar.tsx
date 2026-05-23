@@ -15,9 +15,15 @@ import {
   Save,
   Upload
 } from 'lucide-react';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import { TabDocument } from '../Export/PDFExporter';
 import { saveSong } from '../../utils/persistence';
+
+// Lazy load the PDF components to keep the main bundle small
+const LazyPDFDownloadLink = React.lazy(() => 
+  import('@react-pdf/renderer').then(mod => ({ default: mod.PDFDownloadLink }))
+);
+const LazyTabDocument = React.lazy(() => 
+  import('../Export/PDFExporter').then(mod => ({ default: mod.TabDocument }))
+);
 
 const WholeNoteIcon: React.FC = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -289,7 +295,7 @@ export const Toolbar: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-2 border-r dark:border-slate-700 pr-4">
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">BPM</span>
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase font-sans">BPM</span>
         <input 
           type="number" 
           value={song.tempo} 
@@ -299,7 +305,7 @@ export const Toolbar: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-2 border-r dark:border-slate-700 pr-4">
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Strings</span>
+        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase font-sans">Strings</span>
         <select 
           value={song.tuning.length} 
           onChange={(e) => {
@@ -425,18 +431,20 @@ export const Toolbar: React.FC = () => {
       </div>
 
       <div className="flex gap-1 pr-4">
-        <PDFDownloadLink 
-          document={<TabDocument song={song} />} 
-          fileName={`${song.title.replace(/\s+/g, '_') || 'bass_tab'}.pdf`}
-          className={buttonClass}
-        >
-          {({ loading }) => (
-            <>
-              <Download size={16} className={loading ? 'animate-pulse' : ''} />
-              <span>{loading ? '...' : 'PDF'}</span>
-            </>
-          )}
-        </PDFDownloadLink>
+        <React.Suspense fallback={<button className={buttonClass} disabled><Download size={16} className="animate-pulse" /><span>...</span></button>}>
+          <LazyPDFDownloadLink 
+            document={<LazyTabDocument song={song} />} 
+            fileName={`${song.title.replace(/\s+/g, '_') || 'bass_tab'}.pdf`}
+            className={buttonClass}
+          >
+            {({ loading }: { loading: boolean }) => (
+              <>
+                <Download size={16} className={loading ? 'animate-pulse' : ''} />
+                <span>{loading ? '...' : 'PDF'}</span>
+              </>
+            )}
+          </LazyPDFDownloadLink>
+        </React.Suspense>
       </div>
 
       <button
